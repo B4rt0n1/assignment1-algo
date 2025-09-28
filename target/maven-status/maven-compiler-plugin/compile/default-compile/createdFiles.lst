@@ -1,4 +1,11 @@
 util\CSVWriter.class
+util\ArrayUtils.class
+algo\DeterministicSelect.class
+cli\Main.class
+algo\ClosestPair$Result.class
 util\DepthTracker.class
 algo\MergeSort.class
 util\MetricsCounters.class
+algo\ClosestPair$Point.class
+algo\ClosestPair.class
+algo\QuickSort.class
