@@ -14,13 +14,18 @@ public class DeterministicSelect {
     }
 
 
-    public int select(int[] arr, int k) {
-        ArrayUtils.guardNotNull(arr);
-        if (k < 0 || k >= arr.length) {
-            throw new IllegalArgumentException("k out of range");
-        }
-        return select(arr, 0, arr.length - 1, k);
+public int select(int[] arr, int k) {
+    ArrayUtils.guardNotNull(arr);
+    if (arr.length == 0) {
+        throw new IllegalArgumentException("Array is empty");
     }
+    if (k < 0 || k >= arr.length) {
+        throw new IllegalArgumentException("k out of range");
+    }
+    if (arr.length == 1) return arr[0];
+    return select(arr, 0, arr.length - 1, k);
+}
+
 
     private int select(int[] arr, int left, int right, int k) {
         depthTracker.enter();

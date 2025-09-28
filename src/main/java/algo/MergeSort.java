@@ -14,11 +14,14 @@ public class MergeSort {
         this.depthTracker = depthTracker;
     }
 
-    public void sort(int[] arr) {
-        if (arr == null || arr.length <= 1) return;
-        int[] buffer = new int[arr.length];
-        mergeSort(arr, buffer, 0, arr.length - 1);
+public void sort(int[] arr) {
+    if (arr == null || arr.length <= 1) {
+        return;
     }
+    int[] buffer = new int[arr.length];
+    mergeSort(arr, buffer, 0, arr.length - 1);
+}
+
 
     private void mergeSort(int[] arr, int[] buffer, int left, int right) {
         depthTracker.enter();

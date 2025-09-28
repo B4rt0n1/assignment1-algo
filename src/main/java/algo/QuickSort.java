@@ -46,9 +46,9 @@ public class QuickSort {
 
         for (int j = left; j < right; j++) {
             if (compare(arr[j], pivot) <= 0) {
-                i++;
-                swap(arr, i, j);
+                swap(arr, ++i, j);
             }
+
         }
         swap(arr, i + 1, right);
         return i + 1;

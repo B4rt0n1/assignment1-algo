@@ -38,18 +38,26 @@ public class ClosestPair {
     }
 
     public Result findClosest(Point[] points) {
-        if (points == null || points.length < 2) {
-            throw new IllegalArgumentException("At least two points required");
-        }
-
-        Point[] pointsSortedByX = points.clone();
-        Arrays.sort(pointsSortedByX, Comparator.comparingDouble(p -> p.x));
-
-        Point[] pointsSortedByY = points.clone();
-        Arrays.sort(pointsSortedByY, Comparator.comparingDouble(p -> p.y));
-
-        return closestPair(pointsSortedByX, pointsSortedByY);
+    if (points == null || points.length < 2) {
+        throw new IllegalArgumentException("At least two points required");
     }
+
+    for (int i = 0; i < points.length - 1; i++) {
+        for (int j = i + 1; j < points.length; j++) {
+            if (points[i].x == points[j].x && points[i].y == points[j].y) {
+                return new Result(points[i], points[j], 0.0);
+            }
+        }
+    }
+
+    Point[] pointsSortedByX = points.clone();
+    Arrays.sort(pointsSortedByX, Comparator.comparingDouble(p -> p.x));
+
+    Point[] pointsSortedByY = points.clone();
+    Arrays.sort(pointsSortedByY, Comparator.comparingDouble(p -> p.y));
+
+    return closestPair(pointsSortedByX, pointsSortedByY);
+}
 
     private Result closestPair(Point[] px, Point[] py) {
         depthTracker.enter();
