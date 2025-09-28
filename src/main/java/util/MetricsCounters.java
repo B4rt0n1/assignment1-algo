@@ -1,4 +1,4 @@
-package metrics;
+package util;
 
 public class MetricsCounters {
     private long comparisons = 0;
