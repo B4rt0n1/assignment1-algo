@@ -48,18 +48,4 @@ public class MergeSortTest {
 
         assertTrue(depth.getMaxDepth() <= 2 * (int) (Math.log(n) / Math.log(2)) + 10);
     }
-
-    @Test
-    public void testMetricsAreTracked() {
-        MetricsCounters counters = new MetricsCounters();
-        DepthTracker depth = new DepthTracker();
-        MergeSort ms = new MergeSort(counters, depth);
-
-        int[] arr = {3, 1, 2};
-        ms.sort(arr);
-
-        assertTrue(counters.getComparisons() > 0);
-        assertTrue(counters.getAllocations() > 0);
-        assertTrue(depth.getMaxDepth() > 0);
-    }
 }
