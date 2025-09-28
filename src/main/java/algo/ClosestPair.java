@@ -1,12 +1,23 @@
 package algo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 import util.DepthTracker;
 import util.MetricsCounters;
 
+
 public class ClosestPair {
+
+    private final MetricsCounters counters;
+    private final DepthTracker depth;
+
+    public ClosestPair(MetricsCounters counters, DepthTracker depth) {
+        this.counters = counters;
+        this.depth = depth;
+    }
 
     public static class Point {
         public final double x;
@@ -19,7 +30,8 @@ public class ClosestPair {
     }
 
     public static class Result {
-        public final Point p1, p2;
+        public final Point p1;
+        public final Point p2;
         public final double distance;
 
         public Result(Point p1, Point p2, double distance) {
@@ -29,111 +41,92 @@ public class ClosestPair {
         }
     }
 
-    private final MetricsCounters counters;
-    private final DepthTracker depthTracker;
-
-    public ClosestPair(MetricsCounters counters, DepthTracker depthTracker) {
-        this.counters = counters;
-        this.depthTracker = depthTracker;
-    }
-
     public Result findClosest(Point[] points) {
-    if (points == null || points.length < 2) {
-        throw new IllegalArgumentException("At least two points required");
-    }
-
-    for (int i = 0; i < points.length - 1; i++) {
-        for (int j = i + 1; j < points.length; j++) {
-            if (points[i].x == points[j].x && points[i].y == points[j].y) {
-                return new Result(points[i], points[j], 0.0);
-            }
+        if (points == null || points.length < 2) {
+            throw new IllegalArgumentException("At least 2 points required");
         }
+
+        Point[] px = points.clone();
+        Point[] py = points.clone();
+        Arrays.sort(px, Comparator.comparingDouble(p -> p.x));
+        Arrays.sort(py, Comparator.comparingDouble(p -> p.y));
+
+        return closestPair(px, py);
     }
-
-    Point[] pointsSortedByX = points.clone();
-    Arrays.sort(pointsSortedByX, Comparator.comparingDouble(p -> p.x));
-
-    Point[] pointsSortedByY = points.clone();
-    Arrays.sort(pointsSortedByY, Comparator.comparingDouble(p -> p.y));
-
-    return closestPair(pointsSortedByX, pointsSortedByY);
-}
 
     private Result closestPair(Point[] px, Point[] py) {
-        depthTracker.enter();
-
         int n = px.length;
+
         if (n <= 3) {
-            Result result = bruteForce(px);
-            depthTracker.exit();
-            return result;
+            return bruteForce(px);
         }
 
         int mid = n / 2;
         Point midPoint = px[mid];
 
-        Point[] Qx = Arrays.copyOfRange(px, 0, mid);
-        Point[] Rx = Arrays.copyOfRange(px, mid, n);
+        Point[] pxLeft = Arrays.copyOfRange(px, 0, mid);
+        Point[] pxRight = Arrays.copyOfRange(px, mid, n);
 
-        // Divide py into Qy and Ry
-        Point[] Qy = new Point[mid];
-        Point[] Ry = new Point[n - mid];
-        int qi = 0, ri = 0;
+        List<Point> pyLeftList = new ArrayList<>();
+        List<Point> pyRightList = new ArrayList<>();
         for (Point p : py) {
-            if (p.x <= midPoint.x) Qy[qi++] = p;
-            else Ry[ri++] = p;
+            if (p.x <= midPoint.x) {
+                pyLeftList.add(p);
+            } else {
+                pyRightList.add(p);
+            }
         }
 
-        Result leftResult = closestPair(Qx, Qy);
-        Result rightResult = closestPair(Rx, Ry);
+        Point[] pyLeft = pyLeftList.toArray(new Point[0]);
+        Point[] pyRight = pyRightList.toArray(new Point[0]);
 
-        Result best = leftResult.distance < rightResult.distance ? leftResult : rightResult;
-        Result stripResult = stripClosest(py, midPoint.x, best.distance);
+        Result leftResult = closestPair(pxLeft, pyLeft);
+        Result rightResult = closestPair(pxRight, pyRight);
 
-        depthTracker.exit();
-        return (stripResult != null && stripResult.distance < best.distance) ? stripResult : best;
+        double d = Math.min(leftResult.distance, rightResult.distance);
+        Result best = leftResult.distance <= rightResult.distance ? leftResult : rightResult;
+
+        List<Point> strip = new ArrayList<>();
+        for (Point p : py) {
+            if (Math.abs(p.x - midPoint.x) < d) {
+                strip.add(p);
+            }
+        }
+
+        for (int i = 0; i < strip.size(); i++) {
+            for (int j = i + 1; j < strip.size() && (strip.get(j).y - strip.get(i).y) < d; j++) {
+                double dist = dist(strip.get(i), strip.get(j));
+                if (dist < d) {
+                    d = dist;
+                    best = new Result(strip.get(i), strip.get(j), dist);
+                }
+            }
+        }
+
+        return best;
     }
 
-    private Result bruteForce(Point[] pts) {
+    private Result bruteForce(Point[] points) {
         double minDist = Double.POSITIVE_INFINITY;
-        Point a = null, b = null;
-        for (int i = 0; i < pts.length; i++) {
-            for (int j = i + 1; j < pts.length; j++) {
-                double d = distance(pts[i], pts[j]);
+        Point p1 = null, p2 = null;
+
+        for (int i = 0; i < points.length; i++) {
+            for (int j = i + 1; j < points.length; j++) {
+                double d = dist(points[i], points[j]);
                 if (d < minDist) {
                     minDist = d;
-                    a = pts[i];
-                    b = pts[j];
-                }
-            }
-        }
-        return new Result(a, b, minDist);
-    }
-
-    private Result stripClosest(Point[] py, double midX, double delta) {
-        Point[] strip = Arrays.stream(py)
-                .filter(p -> Math.abs(p.x - midX) < delta)
-                .toArray(Point[]::new);
-
-        double minDist = delta;
-        Point a = null, b = null;
-
-        for (int i = 0; i < strip.length; i++) {
-            for (int j = i + 1; j < strip.length && (strip[j].y - strip[i].y) < minDist; j++) {
-                double d = distance(strip[i], strip[j]);
-                if (d < minDist) {
-                    minDist = d;
-                    a = strip[i];
-                    b = strip[j];
+                    p1 = points[i];
+                    p2 = points[j];
                 }
             }
         }
 
-        return (a != null) ? new Result(a, b, minDist) : null;
+        return new Result(p1, p2, minDist);
     }
 
-    private double distance(Point p1, Point p2) {
-        counters.incComparisons();
-        return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+    private double dist(Point a, Point b) {
+        double dx = a.x - b.x;
+        double dy = a.y - b.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 }
